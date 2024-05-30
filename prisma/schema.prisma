@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String    @id @default(uuid()) // ID unik untuk setiap pengguna
+  username String    @unique // Nama pengguna
+  email    String    @unique // Email pengguna, harus unik
+  password String    // Kata sandi pengguna
+
+  // Relasi ke model Pemasukan
+  Pemasukan Pemasukan[]
+
+  // Relasi ke model Pengeluaran
+  Pengeluaran Pengeluaran[]
+
+  // Relasi ke model Laporan
+  Laporan Laporan[]
+}
+
+
+model Pemasukan {
+  idTransaksiPemasukan String   @id @default(uuid())
+  idUser               String
+  jumlah               Float
+  deskripsi            String
+  tanggal               DateTime @default(now())
+  kategori             String
+  sumber               String
+
+  user    User     @relation(fields: [idUser], references: [id])
+  Laporan Laporan?
+}
+
+model Pengeluaran {
+  idTransaksiPengeluaran String   @id @default(uuid())
+  idUser                 String
+  jumlah                 Float
+  deskripsi              String
+  tanggal                DateTime @default(now())
+  kategori               String
+  sumber                 String
+  lampiran               String?
+
+  user    User     @relation(fields: [idUser], references: [id])
+  Laporan Laporan?
+}
+
+model Laporan {
+  idLaporan              String   @id @default(uuid())
+  idUser                 String
+  idTransaksiPengeluaran String?  @unique
+  idTransaksiPemasukan   String?  @unique
+  keterangan             String
+  tanggal                 DateTime @default(now())
+
+  user        User         @relation(fields: [idUser], references: [id])
+  pemasukan   Pemasukan?   @relation(fields: [idTransaksiPemasukan], references: [idTransaksiPemasukan])
+  pengeluaran Pengeluaran? @relation(fields: [idTransaksiPengeluaran], references: [idTransaksiPengeluaran])
+}
