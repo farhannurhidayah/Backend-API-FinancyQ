@@ -61,18 +61,15 @@ exports.createTransaction = async (req, res) => {
 
 // Update a transaction
 exports.updateTransaction = async (req, res) => {
-    const {  jumlah, deskripsi, tanggal, kategori, sumber } = req.body;
+    const { id } = req.params;
+    const updateData = req.body; // Object containing key-value pairs to be updated
 
     try {
         const pengeluaran = await prisma.pengeluaran.update({
-            where: { idTransaksipengeluaran: req.params.id },
-            data: { 
-                
-                jumlah, 
-                deskripsi, 
-                tanggal: new Date(tanggal), 
-                kategori, 
-                sumber 
+            where: { idTransaksiPengeluaran: id },
+            data: {
+                ...updateData, // Spread the provided update data
+                tanggal: updateData.tanggal ? new Date(updateData.tanggal) : undefined // Update timestamp if provided
             },
         });
         res.json(pengeluaran);
@@ -83,5 +80,12 @@ exports.updateTransaction = async (req, res) => {
 
 // Delete a transaction
 exports.deleteTransaction = async (req, res) => {
-  console.log(req.params.id)
+    try {
+        await prisma.pengeluaran.delete({
+            where: { idTransaksiPengeluaran: req.params.id },
+        });
+        res.json({ message: 'Pengeluaran removed' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 };

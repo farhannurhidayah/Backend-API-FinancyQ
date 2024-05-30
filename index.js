@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // Define Routes
-app.use('/api/transactions', require('./routes/transactionRoutes'));
+app.use('/api/transactions', require('./src/routes/transactionRoutes'));
 
 const PORT = process.env.PORT;
 
