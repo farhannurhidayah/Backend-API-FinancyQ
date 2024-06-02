@@ -1,25 +1,44 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Get all transactions
+
+
+
+// Fungsi untuk mendapatkan tabel berdasarkan tipe
+const getTableByType = (type) => {
+    if (type === 'pengeluaran') {
+        return prisma.pengeluaran;
+    } else if (type === 'pemasukan') {
+        return prisma.pemasukan;
+    }
+    return null;
+};
+
 exports.getTransactions = async (req, res) => {
+    const { type } = req.params;
+    const table = getTableByType(type);
+    
+    if (!table) {
+        return res.status(400).json({ message: 'Transaksi gagal'  });
+    }
+
     try {
-        const pengeluaran = await prisma.pengeluaran.findMany({
+        const transactions = await table.findMany({
             include: {
                 user: true,
             },
         });
 
-        // Group pengeluaran by idUser
-        const groupedpengeluaran = pengeluaran.reduce((acc, curr) => {
+        // Group transactions by idUser
+        const groupedTransactions = transactions.reduce((acc, curr) => {
             if (!acc[curr.idUser]) {
                 acc[curr.idUser] = {
                     user: curr.user,
-                    pengeluaran: []
+                    transactions: []
                 };
             }
-            acc[curr.idUser].pengeluaran.push({
-                idTransaksipengeluaran: curr.idTransaksipengeluaran,
+            acc[curr.idUser].transactions.push({
+                id: curr.id,
                 jumlah: curr.jumlah,
                 deskripsi: curr.deskripsi,
                 tanggal: curr.tanggal,
@@ -30,7 +49,7 @@ exports.getTransactions = async (req, res) => {
         }, {});
 
         // Convert the grouped object to an array
-        const result = Object.values(groupedpengeluaran);
+        const result = Object.values(groupedTransactions);
 
         res.json(result);
     } catch (err) {
@@ -38,12 +57,17 @@ exports.getTransactions = async (req, res) => {
     }
 };
 
+
+
+
 // Create a transaction
 exports.createTransaction = async (req, res) => {
     const { idUser, jumlah, deskripsi ,kategori, sumber } = req.body;
+    const { type } = req.params;
+    const table = getTableByType(type);
 
     try {
-        const pengeluaran = await prisma.pengeluaran.create({
+        const Transaksi = await table.create({
             data: { 
                 idUser, 
                 jumlah, 
@@ -53,7 +77,7 @@ exports.createTransaction = async (req, res) => {
                 sumber 
             },
         });
-        res.status(201).json(pengeluaran);
+        res.status(201).json(Transaksi);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -61,17 +85,26 @@ exports.createTransaction = async (req, res) => {
 
 // Update a transaction
 exports.updateTransaction = async (req, res) => {
-    const { id } = req.params;
-    const updateData = req.body; // Object containing key-value pairs to be updated
+    const { id, type } = req.params;
+    const updateData = req.body;
+    const table = getTableByType(type);
 
     try {
-        const pengeluaran = await prisma.pengeluaran.update({
+        // Validasi bahwa data yang diterima tidak kosong
+        if (!updateData || Object.keys(updateData).length === 0) {
+            return res.status(400).json({ message: "No data provided for update" });
+        }
+
+        // Jika data tanggal disertakan, ubah menjadi objek Date
+        if (updateData.tanggal) {
+            updateData.tanggal = new Date(updateData.tanggal);
+        }
+
+        const pengeluaran = await table.update({
             where: { idTransaksiPengeluaran: id },
-            data: {
-                ...updateData, // Spread the provided update data
-                tanggal: updateData.tanggal ? new Date(updateData.tanggal) : undefined // Update timestamp if provided
-            },
+            data: updateData, // Gunakan langsung updateData tanpa spread operator
         });
+
         res.json(pengeluaran);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -80,12 +113,28 @@ exports.updateTransaction = async (req, res) => {
 
 // Delete a transaction
 exports.deleteTransaction = async (req, res) => {
+    const { id, type } = req.params;
+    const table = getTableByType(type);
     try {
-        await prisma.pengeluaran.delete({
-            where: { idTransaksiPengeluaran: req.params.id },
+        // Memeriksa apakah pengeluaran dengan idTransaksiPengeluaran yang diberikan ada
+        const pengeluaran = await table.findUnique({
+            where: { idTransaksiPengeluaran: id },
         });
+
+        if (!pengeluaran) {
+            return res.status(404).json({ message: 'Pengeluaran not found' });
+        }
+
+        // Menghapus pengeluaran
+        await prisma.pengeluaran.delete({
+            where: { idTransaksiPengeluaran: id },
+        });
+
         res.json({ message: 'Pengeluaran removed' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
+
+
+
