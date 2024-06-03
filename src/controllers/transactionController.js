@@ -7,9 +7,9 @@ const prisma = new PrismaClient();
 // Fungsi untuk mendapatkan tabel berdasarkan tipe
 const getTableByType = (type) => {
     if (type === 'pengeluaran') {
-        return prisma.pengeluaran;
+        return { table: prisma.pengeluaran, idField: 'idTransaksiPengeluaran' };
     } else if (type === 'pemasukan') {
-        return prisma.pemasukan;
+        return { table: prisma.pemasukan, idField: 'idTransaksiPemasukan' };
     }
     return null;
 };
@@ -89,10 +89,14 @@ exports.updateTransaction = async (req, res) => {
     const updateData = req.body;
     const table = getTableByType(type);
 
+    if (!table) {
+        return res.status(400).json({ message: 'Invalid transaction type' });
+    }
+
     try {
         // Validasi bahwa data yang diterima tidak kosong
         if (!updateData || Object.keys(updateData).length === 0) {
-            return res.status(400).json({ message: "No data provided for update" });
+            return res.status(400).json({ message: 'No data provided for update' });
         }
 
         // Jika data tanggal disertakan, ubah menjadi objek Date
@@ -100,41 +104,44 @@ exports.updateTransaction = async (req, res) => {
             updateData.tanggal = new Date(updateData.tanggal);
         }
 
-        const pengeluaran = await table.update({
-            where: { idTransaksiPengeluaran: id },
-            data: updateData, // Gunakan langsung updateData tanpa spread operator
+        const Transaksi = await table.table.update({
+            where: { [table.idField]: id },
+            data: updateData,
         });
 
-        res.json(pengeluaran);
+        res.json(Transaksi);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 };
-
 // Delete a transaction
 exports.deleteTransaction = async (req, res) => {
     const { id, type } = req.params;
     const table = getTableByType(type);
+
+    if (!table) {
+        return res.status(400).json({ message: 'Invalid transaction type' });
+    }
+
     try {
-        // Memeriksa apakah pengeluaran dengan idTransaksiPengeluaran yang diberikan ada
-        const pengeluaran = await table.findUnique({
-            where: { idTransaksiPengeluaran: id },
+        // Memeriksa apakah transaksi dengan id yang diberikan ada
+        const transaction = await table.table.findUnique({
+            where: { [table.idField]: id },
         });
 
-        if (!pengeluaran) {
-            return res.status(404).json({ message: 'Pengeluaran not found' });
+        if (!transaction) {
+            return res.status(404).json({ message: 'Transaction not found' });
         }
 
-        // Menghapus pengeluaran
-        await prisma.pengeluaran.delete({
-            where: { idTransaksiPengeluaran: id },
+        // Menghapus transaksi
+        await table.table.delete({
+            where: { [table.idField]: id },
         });
 
-        res.json({ message: 'Pengeluaran removed' });
+        res.json({ message: 'Transaction removed' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
-
 
 
