@@ -14,28 +14,33 @@ datasource db {
 }
 
 model User {
-  id       String    @id @default(uuid()) // ID unik untuk setiap pengguna
-  username String    @unique // Nama pengguna
-  email    String    @unique // Email pengguna, harus unik
-  password String    // Kata sandi pengguna
+  id           String  @id @default(uuid())
+  username     String  @unique
+  email        String  @unique
+  password     String
+  refreshToken String?
 
-  // Relasi ke model Pemasukan
-  Pemasukan Pemasukan[]
-
-  // Relasi ke model Pengeluaran
-  Pengeluaran Pengeluaran[]
-
-  // Relasi ke model Laporan
-  Laporan Laporan[]
+  Pemasukans   Pemasukan[]
+  Pengeluarans Pengeluaran[]
+  Laporans     Laporan[]
+  OTPs         OTP[]
 }
 
+model OTP {
+  id        String   @id @default(uuid())
+  email     String
+  otp       String
+  createdAt DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+}
 
 model Pemasukan {
   idTransaksiPemasukan String   @id @default(uuid())
   idUser               String
   jumlah               Float
   deskripsi            String
-  tanggal               DateTime @default(now())
+  tanggal              DateTime
   kategori             String
   sumber               String
 
@@ -48,7 +53,7 @@ model Pengeluaran {
   idUser                 String
   jumlah                 Float
   deskripsi              String
-  tanggal                DateTime @default(now())
+  tanggal                DateTime
   kategori               String
   sumber                 String
   lampiran               String?
@@ -63,7 +68,7 @@ model Laporan {
   idTransaksiPengeluaran String?  @unique
   idTransaksiPemasukan   String?  @unique
   keterangan             String
-  tanggal                 DateTime @default(now())
+  tanggal                DateTime
 
   user        User         @relation(fields: [idUser], references: [id])
   pemasukan   Pemasukan?   @relation(fields: [idTransaksiPemasukan], references: [idTransaksiPemasukan])
