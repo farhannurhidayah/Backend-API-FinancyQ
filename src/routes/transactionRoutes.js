@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
 
+
 router.get('/:type', (req, res, next) => {
     const { type } = req.params;
 
@@ -41,5 +42,7 @@ router.delete('/:type/:id', (req, res, next) => {
         res.status(400).json({ message: 'Invalid transaction type' });
     }
 }, transactionController.deleteTransaction);
+
+router.get('/download/pdf/:userId', transactionController.exportToPDF);
 
 module.exports = router;
