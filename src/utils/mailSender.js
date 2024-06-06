@@ -5,16 +5,16 @@ require("dotenv").config();
 const mailGenerator = new Mailgen({
   theme: "default",
   product: {
-    name: "FinancyQ - Kata Kata Hari ini",
-    link: "https://mailgen.js/", //
+    name: "FinancyQ - Manage Your Money, Achieve Your Dreams",
+    link: "mailto:financyQworkspace@gmail.com?subject=Inquiry%20about%20FinancyQ", //
   },
 });
 
 var transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "financyqworkspace@",
-    pass: "cymi ejxi vmcw vkag",
+    user: process.env.HOST_MAIL,
+    pass: process.env.PASS_MAIL,
   },
 });
 
@@ -41,7 +41,7 @@ async function sendingmail(email, otp) {
 
     // Mail options
     const mailOptions = {
-      from: "financyqworkspace@gmail.com",
+      from: process.env.HOST_MAIL,
       to: email,
       subject: "Your OTP Code",
       html: emailBody,

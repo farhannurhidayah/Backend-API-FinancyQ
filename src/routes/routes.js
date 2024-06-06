@@ -14,6 +14,14 @@ const {
   deleteUser,
   deleteAllUsers,
 } = require("../controllers/userController");
+const {
+  createEducationContent,
+  getAllEducationContents,
+  getEducationContentById,
+  updateEducationContent,
+  deleteEducationContent,
+} = require("../controllers/educationContentController");
+
 const authenticateToken = require("../middlewares/auth");
 
 const router = express.Router();
@@ -30,5 +38,11 @@ router.post("/verifyotp", verifyOtp);
 router.post("/login", login);
 router.post("/token", refreshToken);
 router.post("/logout", logout);
+
+router.post("/education-content", createEducationContent);
+router.get("/education-content", getAllEducationContents);
+router.get("/education-content/:id", getEducationContentById);
+router.put("/education-content/:id", updateEducationContent);
+router.delete("/education-content/:id", deleteEducationContent);
 
 module.exports = router;

@@ -3,6 +3,7 @@ const router = express.Router();
 const transactionController = require('../controllers/transactionController');
 
 
+
 router.get('/:type', (req, res, next) => {
     const { type } = req.params;
 

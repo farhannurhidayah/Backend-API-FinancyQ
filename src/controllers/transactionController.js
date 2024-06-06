@@ -15,7 +15,6 @@ const getTableByType = (type) => {
 exports.getTransactions = async (req, res) => {
     const { type } = req.params;
     const tableInfo = getTableByType(type);
-    
     if (!tableInfo) {
         return res.status(400).json({ message: 'Transaksi gagal' });
     }
@@ -141,7 +140,6 @@ exports.deleteTransaction = async (req, res) => {
     }
 };
 
-
 // Fungsi untuk mengekspor data transaksi ke PDF
 exports.exportToPDF = async (req, res) => {
     try {
@@ -166,7 +164,6 @@ exports.exportToPDF = async (req, res) => {
             },
         });
 
-        const PDFDocument = require("./pdf-kit");
         const doc = new PDFDocument();
         let buffers = [];
         doc.on('data', buffers.push.bind(buffers));
@@ -201,7 +198,6 @@ exports.exportToPDF = async (req, res) => {
                 transaction.jumlah,
                 transaction.kategori,
                 transaction.sumber,
-                // `${transaction.user.username}`
             ]);
             totalPengeluaran += transaction.jumlah;
         });
@@ -227,7 +223,6 @@ exports.exportToPDF = async (req, res) => {
                 transaction.jumlah,
                 transaction.kategori,
                 transaction.sumber,
-                // `${transaction.user.username}`
             ]);
             totalPemasukan += transaction.jumlah;
         });
@@ -244,4 +239,3 @@ exports.exportToPDF = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
-
