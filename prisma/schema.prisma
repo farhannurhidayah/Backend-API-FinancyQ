@@ -38,7 +38,7 @@ model OTP {
 model EducationContent {
   id          String   @id @default(uuid())
   title       String
-  description String
+  description String   @db.VarChar(500)
   content     String? // Optional content for hover text
   imageUrl    String
   source      String?
