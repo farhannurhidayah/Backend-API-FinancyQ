@@ -42,5 +42,6 @@ router.delete('/:type/:id', (req, res, next) => {
     }
 }, transactionController.deleteTransaction);
 
+router.get('/download/pdf/:type', transactionController.exportToPDF);
 
 module.exports = router;
