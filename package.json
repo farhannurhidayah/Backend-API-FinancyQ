@@ -23,6 +23,8 @@
     "mysql2": "^3.9.9",
     "nodemailer": "^6.9.13",
     "otp-generator": "^4.0.1",
+    "path": "^0.12.7",
+    "pdfkit": "^0.15.0",
     "prisma": "^5.14.0"
   },
   "devDependencies": {
