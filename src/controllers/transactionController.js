@@ -1,6 +1,8 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const PDFDocument = require('./pdf-kit');
+const moment = require('moment');
+require('moment/locale/id');
 
 // Fungsi untuk mendapatkan tabel berdasarkan tipe
 const getTableByType = (type) => {
@@ -141,35 +143,46 @@ exports.deleteTransaction = async (req, res) => {
 };
 
 exports.exportToPDF = async (req, res) => {
+    const userId = req.params.userId;
+
     try {
-        // Ambil data pemasukan
+        // Atur lokal moment ke bahasa Indonesia
+        moment.locale('id');
+
+        // Ambil data pemasukan berdasarkan user ID
         const pemasukan = await prisma.pemasukan.findMany({
+            where: {
+                idUser: (userId)
+            },
             include: {
                 user: true,
             },
         });
 
-        // Ambil data pengeluaran
+        // Ambil data pengeluaran berdasarkan user ID
         const pengeluaran = await prisma.pengeluaran.findMany({
+            where: {
+                idUser: (userId)
+            },
             include: {
                 user: true,
             },
         });
 
-        // Create The PDF document
+        // Buat dokumen PDF
         const doc = new PDFDocument();
 
-        // Set up buffers to capture the PDF content
+        // Set up buffers untuk menangkap konten PDF
         let buffers = [];
         doc.on('data', buffers.push.bind(buffers));
         doc.on('end', () => {
             let pdfData = Buffer.concat(buffers);
-            res.setHeader('Content-Disposition', `attachment; filename=transactions.pdf`);
+            res.setHeader('Content-Disposition', 'attachment; filename=transactions.pdf');
             res.setHeader('Content-Type', 'application/pdf');
             res.end(pdfData);
         });
 
-        // Add the header
+        // Tambahkan header
         doc
             .fillColor('#444444')
             .fontSize(20)
@@ -179,10 +192,10 @@ exports.exportToPDF = async (req, res) => {
             .text('Bandung, Jawa Barat', 200, 80, { align: 'right' })
             .moveDown();
 
-        // Create the table for Pemasukan
+        // Buat tabel untuk Pemasukan
         doc
             .fontSize(15)
-            .text('Pemasukan', 50, 100)
+            .text('Pemasukan', 50, 100);
 
         const pemasukanTable = {
             headers: ['Tanggal', 'Deskripsi', 'Jumlah', 'Kategori', 'Sumber'],
@@ -192,7 +205,7 @@ exports.exportToPDF = async (req, res) => {
         let totalPemasukan = 0;
         pemasukan.forEach((transaction) => {
             pemasukanTable.rows.push([
-                transaction.tanggal,
+                moment(transaction.tanggal).format('DD MMMM YYYY, HH:mm'), // Format tanggal
                 transaction.deskripsi,
                 transaction.jumlah,
                 transaction.kategori,
@@ -201,41 +214,55 @@ exports.exportToPDF = async (req, res) => {
             totalPemasukan += transaction.jumlah;
         });
 
-        // Draw the Pemasukan table
-        doc.moveDown(4).table(pemasukanTable, 10, 125, { width: 530 });
+        pemasukanTable.rows.push([
+            '', 'Total Pemasukan', totalPemasukan, '', ''
+        ]);
 
-        // Create the table for Pengeluaran
-        doc
-            .addPage()
-            .fontSize(15)
-            .text('Pengeluaran', 50, 100)
-            .moveDown();
+        // Gambar tabel Pemasukan
+        doc.moveDown(1).table(pemasukanTable, 50, 125, { width: 500 });
+
+        // Simpan posisi awal tabel pengeluaran
+        const pengeluaranYPosition = doc.y + 25;
+
+        // Buat tabel untuk Pengeluaran
+        doc.fontSize(15).text('Pengeluaran', 50, pengeluaranYPosition);
 
         const pengeluaranTable = {
-            headers: ['Tanggal', 'Deskripsi', 'Jumlah', 'Kategori', 'Sumber', 'lampiran'],
+            headers: ['Tanggal', 'Deskripsi', 'Jumlah', 'Kategori', 'Sumber', 'Lampiran'],
             rows: []
         };
 
        
         let totalPengeluaran = 0;
         pengeluaran.forEach((transaction) => {
+            let lampiran = '-';
+            if (transaction.lampiran) {
+                lampiran = transaction.lampiran;
+            }
             pengeluaranTable.rows.push([
-                transaction.tanggal,
+                moment(transaction.tanggal).format('DD MMMM YYYY, HH:mm'), // Format tanggal
                 transaction.deskripsi,
                 transaction.jumlah,
                 transaction.kategori,
                 transaction.sumber,
+                lampiran
             ]);
             totalPengeluaran += transaction.jumlah;
         });
 
-        // Draw the Pengeluaran table
-        doc.moveDown(100).table(pengeluaranTable, 10, 125, { width: 530 });
+        pengeluaranTable.rows.push([
+            '', 'Total Pengeluaran', totalPengeluaran, '', ''
+        ]);
 
-        // Finalize the PDF and end the stream
+        // Gambar tabel Pengeluaran
+        doc.moveDown().table(pengeluaranTable, 50, doc.y + 30, { width: 530 });
+
+        // Finalisasi PDF dan akhiri stream
         doc.end();
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
+
+
 

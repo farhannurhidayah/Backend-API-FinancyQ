@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
+const authenticateToken = require("../middlewares/auth");
 
 router.get('/:type', (req, res, next) => {
     const { type } = req.params;
@@ -10,7 +11,7 @@ router.get('/:type', (req, res, next) => {
     } else {
         res.status(400).json({ message: 'Invalid transaction type' });
     }
-}, transactionController.getTransactions);
+}, authenticateToken,transactionController.getTransactions);
 
 router.post('/:type', (req, res, next) => {
     const { type } = req.params;
@@ -42,6 +43,6 @@ router.delete('/:type/:id', (req, res, next) => {
     }
 }, transactionController.deleteTransaction);
 
-router.get('/download/pdf/:type', transactionController.exportToPDF);
+router.get('/:userId/export-pdf',authenticateToken,transactionController.exportToPDF);
 
 module.exports = router;

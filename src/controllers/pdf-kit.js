@@ -1,8 +1,3 @@
-/*
-    Simple tables with node and pdfkit
-    https://www.andronio.me/2017/09/02/pdfkit-tables/
-*/
-
 // Import dependencies
 const PDFDocument = require("pdfkit");
 
@@ -30,6 +25,10 @@ class PDFDocumentWithTables extends PDFDocument {
         const rowSpacing = options.rowSpacing || 5;
         const usableWidth = options.width || (this.page.width - this.page.margins.left - this.page.margins.right);
 
+        // Calculate the actual table width and adjust startX to center the table
+        const tableWidth = usableWidth;
+        startX = (this.page.width - tableWidth) / 2;
+
         const prepareHeader = options.prepareHeader || (() => { });
         const prepareRow = options.prepareRow || (() => { });
         const computeRowHeight = (row) => {
@@ -46,7 +45,7 @@ class PDFDocumentWithTables extends PDFDocument {
             return result + rowSpacing;
         };
 
-        const columnContainerWidth = usableWidth / columnCount;
+        const columnContainerWidth = tableWidth / columnCount;
         const columnWidth = columnContainerWidth - columnSpacing;
         const maxY = this.page.height - this.page.margins.bottom;
 
@@ -66,9 +65,9 @@ class PDFDocumentWithTables extends PDFDocument {
 
         // Print all headers
         table.headers.forEach((header, i) => {
-            this.font("Courier-Bold").fontSize(10).text(header, startX + i * columnContainerWidth, startY, {
+            this.font("Times-Roman").fontSize(10).text(header, startX + i * columnContainerWidth, startY, {
                 width: columnWidth,
-                align: "left"
+                align: "right"
             });
         });
 
@@ -77,7 +76,7 @@ class PDFDocumentWithTables extends PDFDocument {
 
         // Separation line between headers and rows
         this.moveTo(startX, rowBottomY - rowSpacing * 0.5)
-            .lineTo(startX + usableWidth, rowBottomY - rowSpacing * 0.5)
+            .lineTo(startX + tableWidth, rowBottomY - rowSpacing * 0.5)
             .lineWidth(2)
             .stroke();
 
@@ -98,7 +97,7 @@ class PDFDocumentWithTables extends PDFDocument {
             row.forEach((cell, i) => {
                 this.text(cell, startX + i * columnContainerWidth, startY, {
                     width: columnWidth,
-                    align: "left"
+                    align: "right"
                 });
             });
 
@@ -107,7 +106,7 @@ class PDFDocumentWithTables extends PDFDocument {
 
             // Separation line between rows
             this.moveTo(startX, rowBottomY - rowSpacing * 0.3)
-                .lineTo(startX + usableWidth, rowBottomY - rowSpacing * 0.3)
+                .lineTo(startX + tableWidth, rowBottomY - rowSpacing * 0.3)
                 .lineWidth(1)
                 .opacity(0.7)
                 .stroke()
