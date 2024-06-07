@@ -6,10 +6,11 @@ const { sendingmail } = require("../utils/mailSender");
 
 const prisma = new PrismaClient();
 
-const generateAccessToken = (user) => {
-  return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
-};
+// const generateAccessToken = (user) => {
+//   return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+// };
 
+//digunakan sebagai AccessToken unruk meakses UserAPI
 const generateRefreshToken = (user) => {
   return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
 };
@@ -107,26 +108,26 @@ exports.verifyOtp = async (req, res) => {
     delete req.session.tempUserData;
 
     // Generate tokens
-    const accessToken = generateAccessToken({
-      id: newUser.id,
-      username: newUser.username,
-    });
-    const refreshToken = generateRefreshToken({
-      id: newUser.id,
-      username: newUser.username,
-    });
+    // const accessToken = generateAccessToken({
+    //   id: newUser.id,
+    //   username: newUser.username,
+    // });
+    // const refreshToken = generateRefreshToken({
+    //   id: newUser.id,
+    //   username: newUser.username,
+    // });
 
-    await prisma.user.update({
-      where: { id: newUser.id },
-      data: { refreshToken },
-    });
+    // await prisma.user.update({
+    //   where: { id: newUser.id },
+    //   data: { refreshToken },
+    // });
 
     res.status(200).json({
       success: true,
       message: "User registered successfully",
       user: newUser,
-      accessToken,
-      refreshToken,
+      // accessToken,
+      // refreshToken,
     });
   } catch (error) {
     res.status(500).json({
@@ -147,10 +148,14 @@ exports.login = async (req, res) => {
     if (!validPassword)
       return res.status(400).json({ message: "Invalid password" });
 
-    const accessToken = generateAccessToken({
-      id: user.id,
-      username: user.username,
-    });
+    // const accessToken = generateAccessToken({
+    //   id: user.id,
+    //   username: user.username,
+    // });
+    if (user.refreshToken) {
+      return res.status(200).json({ message: "You are already logged in" });
+    };
+
     const refreshToken = generateRefreshToken({
       id: user.id,
       username: user.username,
@@ -161,35 +166,35 @@ exports.login = async (req, res) => {
       data: { refreshToken },
     });
 
-    res.json({ accessToken, refreshToken });
+    res.json({ refreshToken });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-exports.refreshToken = async (req, res) => {
-  const { token } = req.body;
-  if (!token) return res.sendStatus(401);
+// exports.refreshToken = async (req, res) => {
+//   const { token } = req.body;
+//   if (!token) return res.sendStatus(401);
 
-  try {
-    const user = await prisma.user.findFirst({
-      where: { refreshToken: token },
-    });
-    if (!user) return res.sendStatus(403);
+//   try {
+//     const user = await prisma.user.findFirst({
+//       where: { refreshToken: token },
+//     });
+//     if (!user) return res.sendStatus(403);
 
-    jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (err) return res.sendStatus(403);
+//     jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+//       if (err) return res.sendStatus(403);
 
-      const accessToken = generateAccessToken({
-        id: user.id,
-        username: user.username,
-      });
-      res.json({ accessToken });
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+//       const accessToken = generateAccessToken({
+//         id: user.id,
+//         username: user.username,
+//       });
+//       res.json({ accessToken });
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
 exports.logout = async (req, res) => {
   const { token } = req.body;
