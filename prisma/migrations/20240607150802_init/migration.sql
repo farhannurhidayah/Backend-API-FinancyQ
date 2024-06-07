@@ -26,7 +26,7 @@ CREATE TABLE `OTP` (
 CREATE TABLE `EducationContent` (
     `id` VARCHAR(191) NOT NULL,
     `title` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(500) NOT NULL,
     `content` VARCHAR(191) NULL,
     `imageUrl` VARCHAR(191) NOT NULL,
     `source` VARCHAR(191) NULL,
