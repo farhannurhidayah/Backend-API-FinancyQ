@@ -1,8 +1,14 @@
+require("dotenv").config();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const PDFDocument = require('./pdf-kit');
 const moment = require('moment');
 require('moment/locale/id');
+const { Storage } = require('@google-cloud/storage');
+const storage = new Storage();
+const bucketName = 'bucket-storage-financyq'; // Ganti dengan nama bucket GCS Anda
+process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
 
 // Fungsi untuk mendapatkan tabel berdasarkan tipe
 const getTableByType = (type) => {
@@ -12,6 +18,24 @@ const getTableByType = (type) => {
         return { table: prisma.pemasukan, idField: 'idTransaksiPemasukan' };
     }
     return null;
+};
+
+const uploadImageToGCS = async (file) => {
+    const { buffer, originalname } = file;
+    const destination = `pengeluaran-images/${originalname}`;
+
+    const bucket = storage.bucket(bucketName);
+    const blob = bucket.file(destination);
+    const blobStream = blob.createWriteStream();
+
+    return new Promise((resolve, reject) => {
+        blobStream.on('finish', () => {
+            const publicUrl = `https://storage.googleapis.com/${bucketName}/${destination}`;
+            resolve(publicUrl);
+        }).on('error', (err) => {
+            reject(err);
+        }).end(buffer);
+    });
 };
 
 exports.getTransactions = async (req, res) => {
@@ -36,14 +60,19 @@ exports.getTransactions = async (req, res) => {
                     transactions: []
                 };
             }
-            acc[curr.idUser].transactions.push({
+            // Determine if the transaction type is 'pengeluaran' to include the 'lampiran' field
+            const transactionData = {
                 idTransaksi: curr[tableInfo.idField],
                 jumlah: curr.jumlah,
                 deskripsi: curr.deskripsi,
                 tanggal: curr.tanggal,
                 kategori: curr.kategori,
-                sumber: curr.sumber
-            });
+                sumber: curr.sumber,
+            };
+            if (type === 'pengeluaran') {
+                transactionData.lampiran = curr.lampiran;
+            }
+            acc[curr.idUser].transactions.push(transactionData);
             return acc;
         }, {});
 
@@ -62,20 +91,44 @@ exports.createTransaction = async (req, res) => {
     const tableInfo = getTableByType(type);
 
     if (!tableInfo) {
-        return res.status(400).json({ message: 'Invalid transaction type' });
+        return res.status(400).json({ message: 'Jenis transaksi tidak valid' });
     }
 
     try {
-        const Transaksi = await tableInfo.table.create({
-            data: {
-                idUser,
-                jumlah,
-                deskripsi,
-                tanggal: new Date(),
-                kategori,
-                sumber
-            },
-        });
+        let lampiranUrl = null;
+
+        // Unggah gambar ke GCS jika ada dan ini adalah transaksi pengeluaran
+        if (type === 'pengeluaran' && req.file) {
+            lampiranUrl = await uploadImageToGCS(req.file);
+        }
+
+        let Transaksi;
+        if (type === 'pengeluaran') {
+            Transaksi = await tableInfo.table.create({
+                data: {
+                    idUser,
+                    jumlah : parseFloat(jumlah),
+                    deskripsi,
+                    tanggal: new Date(),
+                    kategori,
+                    sumber,
+                    lampiran: lampiranUrl // Sertakan lampiranUrl jika ini transaksi pengeluaran
+                },
+            });
+        } else if (type === 'pemasukan') {
+            Transaksi = await tableInfo.table.create({
+                data: {
+                    idUser,
+                    jumlah,
+                    deskripsi,
+                    tanggal: new Date(),
+                    kategori,
+                    sumber
+                    // Tambahkan kolom lainnya yang diperlukan untuk pemasukan
+                },
+            });
+        }
+
         res.status(201).json(Transaksi);
     } catch (err) {
         res.status(400).json({ message: err.message });
