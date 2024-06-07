@@ -1,3 +1,5 @@
 node_modules
 # Keep environment variables out of version control
 .env
+
+financyq-project-082b0a69d5da.json
