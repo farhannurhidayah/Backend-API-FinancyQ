@@ -1,6 +1,4 @@
-
-
-// Import
+// Import dependencies
 const PDFDocument = require("pdfkit");
 
 class PDFDocumentWithTables extends PDFDocument {
@@ -27,6 +25,10 @@ class PDFDocumentWithTables extends PDFDocument {
         const rowSpacing = options.rowSpacing || 5;
         const usableWidth = options.width || (this.page.width - this.page.margins.left - this.page.margins.right);
 
+        // Calculate the actual table width and adjust startX to center the table
+        const tableWidth = usableWidth;
+        startX = (this.page.width - tableWidth) / 2;
+
         const prepareHeader = options.prepareHeader || (() => { });
         const prepareRow = options.prepareRow || (() => { });
         const computeRowHeight = (row) => {
@@ -43,7 +45,7 @@ class PDFDocumentWithTables extends PDFDocument {
             return result + rowSpacing;
         };
 
-        const columnContainerWidth = usableWidth / columnCount;
+        const columnContainerWidth = tableWidth / columnCount;
         const columnWidth = columnContainerWidth - columnSpacing;
         const maxY = this.page.height - this.page.margins.bottom;
 
@@ -51,65 +53,64 @@ class PDFDocumentWithTables extends PDFDocument {
 
         this.on("pageAdded", () => {
             startY = this.page.margins.top;
-            rowBottomY = 0;
+            rowBottomY = 40;
         });
 
-        // Mengizinkan pengguna mengganti gaya header
+        // Allow the user to override style for headers
         prepareHeader();
 
-        // Periksa apakah ada cukup ruang untuk header dan baris pertama
+        // Check to have enough room for header and first rows
         if (startY + 3 * computeRowHeight(table.headers) > maxY)
             this.addPage();
 
-        // Cetak semua header
+        // Print all headers
         table.headers.forEach((header, i) => {
             this.font("Times-Roman").fontSize(10).text(header, startX + i * columnContainerWidth, startY, {
                 width: columnWidth,
-                align: "left"
+                align: "right"
             });
         });
 
-        // Segarkan koordinat y di bagian bawah baris header
+        // Refresh the y coordinate of the bottom of the headers row
         rowBottomY = Math.max(startY + computeRowHeight(table.headers), rowBottomY);
 
-        // Garis pemisah antara header dan baris
+        // Separation line between headers and rows
         this.moveTo(startX, rowBottomY - rowSpacing * 0.5)
-            .lineTo(startX + usableWidth, rowBottomY - rowSpacing * 0.5)
+            .lineTo(startX + tableWidth, rowBottomY - rowSpacing * 0.5)
             .lineWidth(2)
             .stroke();
 
         table.rows.forEach((row, i) => {
             const rowHeight = computeRowHeight(row);
 
-         // Beralih ke halaman berikutnya jika kita tidak dapat melangkah lebih jauh karena ruang sudah habis.
-        // Demi keamanan, pertimbangkan margin 3 baris, bukan hanya satu
+            // Switch to next page if we cannot go any further because the space is over.
+            // For safety, consider 3 rows margin instead of just one
             if (startY + 3 * rowHeight < maxY)
                 startY = rowBottomY + rowSpacing;
             else
                 this.addPage();
 
-        // Izinkan pengguna mengganti gaya baris
+            // Allow the user to override style for rows
             prepareRow(row, i);
 
-         // Cetak semua sel pada baris saat ini
+            // Print all cells of the current row
             row.forEach((cell, i) => {
                 this.text(cell, startX + i * columnContainerWidth, startY, {
                     width: columnWidth,
-                    align: "left"
+                    align: "right"
                 });
             });
 
-            // Segarkan koordinat y di bagian bawah baris ini
+            // Refresh the y coordinate of the bottom of this row
             rowBottomY = Math.max(startY + rowHeight, rowBottomY);
 
-            
-            // Garis pemisah antar baris
+            // Separation line between rows
             this.moveTo(startX, rowBottomY - rowSpacing * 0.3)
-                .lineTo(startX + usableWidth, rowBottomY - rowSpacing * 0.3)
+                .lineTo(startX + tableWidth, rowBottomY - rowSpacing * 0.3)
                 .lineWidth(1)
                 .opacity(0.7)
                 .stroke()
-                .opacity(1); //Reset opacity setelah menggambar garis
+                .opacity(1); // Reset opacity after drawing the line
         });
 
         this.x = startX;
