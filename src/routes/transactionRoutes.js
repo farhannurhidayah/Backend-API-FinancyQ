@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const transactionController = require('../controllers/transactionController');
+const authenticateToken = require("../middlewares/auth");
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/:type', (req, res, next) => {
     const { type } = req.params;
@@ -10,7 +13,7 @@ router.get('/:type', (req, res, next) => {
     } else {
         res.status(400).json({ message: 'Invalid transaction type' });
     }
-}, transactionController.getTransactions);
+}, authenticateToken,transactionController.getTransactions);
 
 router.post('/:type', (req, res, next) => {
     const { type } = req.params;
@@ -20,7 +23,7 @@ router.post('/:type', (req, res, next) => {
     } else {
         res.status(400).json({ message: 'Invalid transaction type' });
     }
-}, transactionController.createTransaction);
+}, upload.single('lampiran'),authenticateToken, transactionController.createTransaction);
 
 router.put('/:type/:id', (req, res, next) => {
     const { type } = req.params;
@@ -30,7 +33,7 @@ router.put('/:type/:id', (req, res, next) => {
     } else {
         res.status(400).json({ message: 'Invalid transaction type' });
     }
-}, transactionController.updateTransaction);
+}, authenticateToken,transactionController.updateTransaction);
 
 router.delete('/:type/:id', (req, res, next) => {
     const { type } = req.params;
@@ -40,7 +43,8 @@ router.delete('/:type/:id', (req, res, next) => {
     } else {
         res.status(400).json({ message: 'Invalid transaction type' });
     }
-}, transactionController.deleteTransaction);
+}, authenticateToken,transactionController.deleteTransaction);
 
+router.get('/:userId/export-pdf',authenticateToken,transactionController.exportToPDF);
 
 module.exports = router;
