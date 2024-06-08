@@ -7,7 +7,8 @@ const routesthisapp = require("./src/routes/routes");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
+const host = process.env.HOST || 'localhost';
 
 // Middleware
 app.use(cors());
@@ -23,6 +24,6 @@ app.use((req, res, next) => {
   res.status(404).send("Sorry, that route doesn't exist.");
 });
 
-app.listen(port, () => {
-  console.log(`FinancyQ listening on "http://localhost:${port}"`);
+app.listen(port,host, () => {
+  console.log(`FinancyQ listening on "http://${host}:${port}"`);
 });
