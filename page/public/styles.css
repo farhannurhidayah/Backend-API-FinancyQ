@@ -2,8 +2,8 @@ body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f9;
-  color: #333;
+  background-color: #f6dbbb;
+  color: #a7763a;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -74,13 +74,13 @@ nav .nav-links li {
 
 nav .nav-links li a {
   text-decoration: none;
-  color: #333;
+  color: #fff;
   font-weight: bold;
   font-size: 0.9em;
 }
 
 nav .nav-download-button {
-  background-color: #4285f4;
+  background-color: #f6dbbb;
   color: #fff;
   padding: 8px 15px;
   text-decoration: none;
@@ -90,7 +90,7 @@ nav .nav-download-button {
 }
 
 nav .nav-download-button:hover {
-  background-color: #357ae8;
+  background-color: #ae9373;
 }
 
 .container {
@@ -140,8 +140,9 @@ nav .nav-download-button:hover {
 }
 
 .right-container img {
-  max-width: 80%;
-  height: auto;
+  max-height: 80vh; /* Make sure the image doesn't exceed 80% of the viewport height */
+  margin: 20px;
+  width: auto;
 }
 
 footer {
