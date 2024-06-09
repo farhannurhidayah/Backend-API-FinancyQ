@@ -4,23 +4,63 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FinancyQ - Manage Your Money, Achieve Your Dreams</title>
-    <link rel="stylesheet" type="text/css" href="/styles.css" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <nav>
+      <div class="logo">
+        <img
+          src="https://storage.googleapis.com/bucket-storage-financyq/LogoFinancyQ.png"
+          alt="FinancyQ Logo"
+        />
+        <span>FinancyQ</span>
+      </div>
+      <div class="menu-icon" onclick="toggleMenu()">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </div>
+      <ul class="nav-links">
+        <li><a href="#support">Support</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li>
+          <a href="https://play.google.com/store" class="nav-download-button"
+            >Download on Play Store</a
+          >
+        </li>
+      </ul>
+    </nav>
+
     <div class="container">
-      <header>
-        <h1>FinancyQ</h1>
-        <p>Manage Your Money, Achieve Your Dreams</p>
-      </header>
-      <main>
-        <p>FinancyQ helps you track your income and expenses efficiently.</p>
-        <a href="https://play.google.com/store" class="download-button"
-          >Download on Google Play</a
-        >
-      </main>
-      <footer>
-        <p>&copy; 2024 FinancyQ. All rights reserved.</p>
-      </footer>
+      <div class="left-container">
+        <header>
+          <h1>FinancyQ</h1>
+          <p>Manage Your Money, Achieve Your Dreams</p>
+        </header>
+        <main>
+          <p>FinancyQ helps you track your income and expenses efficiently.</p>
+          <a href="https://play.google.com/store" class="download-button"
+            >Download on Google Play</a
+          >
+        </main>
+      </div>
+      <div class="right-container">
+        <img src="image.png" alt="App Usage on Phone" />
+      </div>
     </div>
+
+    <footer>
+      <p>&copy; 2024 FinancyQ. All rights reserved.</p>
+    </footer>
+
+    <script>
+      function toggleMenu() {
+        const navLinks = document.querySelector(".nav-links");
+        navLinks.classList.toggle("active");
+        const menuIcon = document.querySelector(".menu-icon");
+        menuIcon.classList.toggle("change");
+      }
+    </script>
   </body>
 </html>
