@@ -1,3 +1,5 @@
+/* Existing styles... */
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -152,6 +154,59 @@ footer {
   color: #a7763a;
   font-size: 0.8em;
   border-top: 1px solid #fcd3a0;
+}
+
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 800px;
+  border-radius: 10px; /* Added border-radius */
+}
+
+.close {
+  color: #a7763a;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.team-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.role-container {
+  flex: 1;
+  margin: 10px;
+  min-width: 200px;
+}
+
+.member {
+  margin-bottom: 10px;
 }
 
 /* Media Queries */
