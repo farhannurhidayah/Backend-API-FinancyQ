@@ -5,7 +5,7 @@ const sessionMiddleware = session({
   secret: process.env.SECRET_SESSION_TOKEN,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: true }, // Set to true in production with HTTPS
+  cookie: { secure: false }, // Set to true in production with HTTPS
 });
 
 module.exports = sessionMiddleware;

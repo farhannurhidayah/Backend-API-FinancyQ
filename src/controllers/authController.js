@@ -48,6 +48,7 @@ exports.signup = async (req, res) => {
     await sendingmail(email, otp);
 
     req.session.tempUserData = { username, email, password };
+    // console.log(req.session.tempUserData); // check
 
     res.status(200).json({
       success: true,
@@ -154,7 +155,7 @@ exports.login = async (req, res) => {
     // });
     if (user.refreshToken) {
       return res.status(200).json({ message: "You are already logged in" });
-    };
+    }
 
     const refreshToken = generateRefreshToken({
       id: user.id,
