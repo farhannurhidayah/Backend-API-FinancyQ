@@ -27,11 +27,17 @@ exports.createEducationContent = async (req, res) => {
 exports.getAllEducationContents = async (req, res) => {
   try {
     const contents = await prisma.educationContent.findMany();
-    res.status(200).json(contents);
+    res.status(200).json({
+      success: true,
+      message: "Successfully retrieved education contents",
+      data: contents,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Error retrieving education contents: " + error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error retrieving education contents",
+      error: error.message,
+    });
   }
 };
 
