@@ -167,7 +167,7 @@ exports.login = async (req, res) => {
       data: { refreshToken },
     });
 
-    res.json({ username: user.username, email: user.email, refreshToken });
+    res.json({ refreshToken });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
