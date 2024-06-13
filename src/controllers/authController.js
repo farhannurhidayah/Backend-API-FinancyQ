@@ -196,7 +196,10 @@ exports.logout = async (req, res) => {
         .json({ error: "Invalid token or user already logged out" });
     }
 
-    res.sendStatus(204);
+    res.sendStatus(200).json({
+      success: true,
+      message: "User Logged out succesfully",
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
