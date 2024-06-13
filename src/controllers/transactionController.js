@@ -6,7 +6,7 @@ const moment = require('moment');
 require('moment/locale/id');
 const { Storage } = require('@google-cloud/storage');
 const storage = new Storage();
-const bucketName = 'bucket-storage-financyq'; // Ganti dengan nama bucket GCS Anda
+const bucketName = process.env.BUCKET_NAME; // Ganti dengan nama bucket GCS Anda
 process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
 

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FinancyQ - Manage Your Money, Achieve Your Dreams</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav>
+      <div class="logo">
+        <img
+          src="https://storage.googleapis.com/bucket-storage-financyq/LogoFinancyQ.png"
+          alt="FinancyQ Logo"
+        />
+        <span>FinancyQ</span>
+      </div>
+      <div class="menu-icon" onclick="toggleMenu()">
+        <div class="bar1"></div>
+        <div class="bar2"></div>
+        <div class="bar3"></div>
+      </div>
+      <ul class="nav-links">
+        <li><a href="mailto:financyqworkspace@gmail.com">Support</a></li>
+        <li><a href="#faq" onclick="showModal('faq-modal')">FAQ</a></li>
+        <li>
+          <a href="#about" onclick="showModal('about-modal')">About Us</a>
+        </li>
+        <li>
+          <a href="https://play.google.com/store" class="nav-download-button"
+            >Download on Play Store</a
+          >
+        </li>
+      </ul>
+    </nav>
+
+    <div class="container">
+      <div class="left-container">
+        <header>
+          <h1>FinancyQ</h1>
+          <p>Manage Your Money, Achieve Your Dreams</p>
+        </header>
+        <main>
+          <p>FinancyQ helps you track your income and expenses efficiently.</p>
+          <a href="https://play.google.com/store" class="download-button"
+            >Download on Google Play</a
+          >
+        </main>
+      </div>
+      <div class="right-container">
+        <img
+          src="https://storage.googleapis.com/bucket-storage-financyq/Device%20Frames%20for%20Mockups.png"
+          alt="App Usage on Phone"
+        />
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2024 FinancyQ. All rights reserved.</p>
+    </footer>
+
+    <!-- FAQ Modal -->
+    <div id="faq-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('faq-modal')">&times;</span>
+        <h2>FAQ</h2>
+        <p><strong>Aplikasi Apa ini?</strong></p>
+        <p>
+          FinancyQ adalah aplikasi manajemen keuangan yang membantu Anda melacak
+          pendapatan dan pengeluaran dengan efisien.
+        </p>
+        <p><strong>Permasalahan Apa yang diselesaikan?</strong></p>
+        <p>
+          FinancyQ membantu Anda memahami kebiasaan pengeluaran, merencanakan
+          anggaran, dan mencapai tujuan keuangan Anda.
+        </p>
+      </div>
+    </div>
+
+    <!-- About Us Modal -->
+    <div id="about-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal('about-modal')">&times;</span>
+        <h2>About Us</h2>
+        <p>
+          Kami adalah pembuat aplikasi ini yang bertujuan untuk membantu Anda
+          mengelola keuangan dengan lebih baik. Semoga Bermanfaat.
+        </p>
+        <div class="team-container">
+          <div class="role-container">
+            <h3>Mobile Development</h3>
+            <div class="member">
+              <p><strong>Aisyah Husna Alifah</strong></p>
+              <p>Universitas Pendidikan Indonesia</p>
+            </div>
+            <div class="member">
+              <p><strong>M.Fiqry Septiawan</strong></p>
+              <p>Universitas Muslim Indonesia</p>
+            </div>
+          </div>
+          <div class="role-container">
+            <h3>Machine Learning</h3>
+            <div class="member">
+              <p><strong>Muhammad Yasir Amri</strong></p>
+              <p>Institut Pertanian Bogor</p>
+            </div>
+            <div class="member">
+              <p><strong>Dinar Ferdiansyah</strong></p>
+              <p>Universitas Brawijaya</p>
+            </div>
+            <div class="member">
+              <p><strong>Alya Syahrani</strong></p>
+              <p>Universitas Pendidikan Indonesia</p>
+            </div>
+          </div>
+          <div class="role-container">
+            <h3>Cloud Computing</h3>
+            <div class="member">
+              <p><strong>Farhan Nurhidayah</strong></p>
+              <p>Universitas Muhammadiyah Prof Dr Hamka</p>
+            </div>
+            <div class="member">
+              <p><strong>Adrian Kusuma W K</strong></p>
+              <p>Universitas Pendidikan Indonesia</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function toggleMenu() {
+        const navLinks = document.querySelector(".nav-links");
+        navLinks.classList.toggle("active");
+        const menuIcon = document.querySelector(".menu-icon");
+        menuIcon.classList.toggle("change");
+      }
+
+      function showModal(modalId) {
+        document.getElementById(modalId).style.display = "block";
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+      }
+
+      window.onclick = function (event) {
+        if (event.target.className === "modal") {
+          event.target.style.display = "none";
+        }
+      };
+    </script>
+  </body>
+</html>
