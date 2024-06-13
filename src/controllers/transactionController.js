@@ -38,15 +38,19 @@ const uploadImageToGCS = async (file) => {
     });
 };
 
-exports.getTransactions = async (req, res) => {
-    const { type } = req.params;
+
+
+exports.getAllTransactionsByUser = async (req, res) => {
+    const { type, idUser } = req.params;
     const tableInfo = getTableByType(type);
+
     if (!tableInfo) {
-        return res.status(400).json({ message: 'Transaksi gagal' });
+        return res.status(400).json({ message: 'Invalid transaction type' });
     }
 
     try {
         const transactions = await tableInfo.table.findMany({
+            where: { idUser },
             include: {
                 user: true,
             },
@@ -56,7 +60,9 @@ exports.getTransactions = async (req, res) => {
         const groupedTransactions = transactions.reduce((acc, curr) => {
             if (!acc[curr.idUser]) {
                 acc[curr.idUser] = {
-                    user: curr.user,
+                    username: curr.user.username,
+                    error: false,
+                    message: "Message Success",
                     transactions: []
                 };
             }
@@ -76,14 +82,13 @@ exports.getTransactions = async (req, res) => {
             return acc;
         }, {});
 
-        // Convert the grouped object to an array
-        const result = Object.values(groupedTransactions);
-
-        res.json(result);
+        // Return the grouped transactions as an object
+        res.json(groupedTransactions);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
+
 
 exports.createTransaction = async (req, res) => {
     const { idUser, jumlah, deskripsi, kategori, sumber } = req.body;

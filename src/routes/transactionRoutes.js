@@ -5,15 +5,15 @@ const authenticateToken = require("../middlewares/auth");
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get('/:type', (req, res, next) => {
-    const { type } = req.params;
+router.get('/:type/:idUser', (req, res, next) => {
+    const { type, idUser } = req.params;
 
     if (type === 'pengeluaran' || type === 'pemasukan') {
         next();
     } else {
         res.status(400).json({ message: 'Invalid transaction type' });
     }
-}, authenticateToken,transactionController.getTransactions);
+}, authenticateToken,transactionController.getAllTransactionsByUser);
 
 router.post('/:type', (req, res, next) => {
     const { type } = req.params;
