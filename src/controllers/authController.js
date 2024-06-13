@@ -48,7 +48,7 @@ exports.signup = async (req, res) => {
     await sendingmail(email, otp);
 
     req.session.tempUserData = { username, email, password };
-    // console.log(req.session.tempUserData); // check
+    console.log(req.session.tempUserData); // check signup
 
     res.status(200).json({
       success: true,
@@ -95,6 +95,7 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
+    console.log(req.session.tempUserData); // check otp
     const { username, password } = req.session.tempUserData;
 
     // Hash password
@@ -108,27 +109,10 @@ exports.verifyOtp = async (req, res) => {
 
     delete req.session.tempUserData;
 
-    // Generate tokens
-    // const accessToken = generateAccessToken({
-    //   id: newUser.id,
-    //   username: newUser.username,
-    // });
-    // const refreshToken = generateRefreshToken({
-    //   id: newUser.id,
-    //   username: newUser.username,
-    // });
-
-    // await prisma.user.update({
-    //   where: { id: newUser.id },
-    //   data: { refreshToken },
-    // });
-
     res.status(200).json({
       success: true,
       message: "User registered successfully",
       user: newUser,
-      // accessToken,
-      // refreshToken,
     });
   } catch (error) {
     res.status(500).json({

@@ -11,7 +11,11 @@ const app = express();
 const port = process.env.PORT || 8080;
 const host = process.env.HOST || "localhost";
 
+//menabahkan urlencoded
+app.use(express.urlencoded({ extended: false }));
+
 // Middleware
+app.set("trust proxy", 1); // trust first proxy
 app.use(cors());
 app.use(express.json());
 app.use(sessionMiddleware);
