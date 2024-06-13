@@ -151,7 +151,12 @@ exports.login = async (req, res) => {
       data: { refreshToken },
     });
 
-    res.json({ username: user.username, email: user.email, refreshToken });
+    res.json({
+      userid: user.id,
+      username: user.username,
+      email: user.email,
+      refreshToken,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -196,11 +201,9 @@ exports.logout = async (req, res) => {
         .json({ error: "Invalid token or user already logged out" });
     }
 
-    res.sendStatus(200).json({
-      success: true,
-      message: "User Logged out succesfully",
-    });
+    // Combine status code and message in a single response
+    return res.status(200).json({ message: "User logged out Succesfully" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
