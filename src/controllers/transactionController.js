@@ -61,8 +61,8 @@ exports.getAllTransactionsByUser = async (req, res) => {
             if (!acc[curr.idUser]) {
                 acc[curr.idUser] = {
                     username: curr.user.username,
-                    error:false,
-                    message:"Message Success",
+                    error: false,
+                    message: "Message Success",
                     transactions: []
                 };
             }
@@ -82,14 +82,13 @@ exports.getAllTransactionsByUser = async (req, res) => {
             return acc;
         }, {});
 
-        // Convert the grouped object to an array
-        const result = Object.values(groupedTransactions);
-
-        res.json(result);
+        // Return the grouped transactions as an object
+        res.json(groupedTransactions);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
+
 
 exports.createTransaction = async (req, res) => {
     const { idUser, jumlah, deskripsi, kategori, sumber } = req.body;
