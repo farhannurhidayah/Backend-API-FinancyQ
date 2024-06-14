@@ -3,6 +3,14 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const generateOTP = require("../utils/otp");
 const { sendingmail } = require("../utils/mailSender");
+const redis = require("redis");
+
+// Initialize Redis client
+const client = redis.createClient();
+
+client.on("error", (err) => {
+  console.error("Redis error:", err);
+});
 
 const prisma = new PrismaClient();
 
@@ -14,6 +22,17 @@ const prisma = new PrismaClient();
 const generateRefreshToken = (user) => {
   return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
 };
+
+client
+  .connect()
+  .then(() => {
+    console.log("Connected to Redis");
+  })
+  .catch((err) => {
+    console.error("Redis connection error:", err);
+  });
+
+//===================================================================================
 
 exports.signup = async (req, res) => {
   const { username, email, password } = req.body;
@@ -47,8 +66,9 @@ exports.signup = async (req, res) => {
 
     await sendingmail(email, otp);
 
-    req.session.tempUserData = { username, email, password };
-    console.log(req.session.tempUserData); // check signup
+    // Store temporary user data in Redis
+    client.set(email, JSON.stringify({ username, email, password }), "EX", 300);
+    console.log("Signup - Temp User Data:", { username, email, password });
 
     res.status(200).json({
       success: true,
@@ -95,24 +115,43 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
-    console.log(req.session.tempUserData); // check otp
-    const { username, password } = req.session.tempUserData;
+    // Retrieve temporary user data from Redis
+    client.get(email, async (err, data) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: "Error retrieving temporary user data: " + err.message,
+        });
+      }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+      const tempUserData = JSON.parse(data);
 
-    const newUser = await prisma.user.create({
-      data: { username, email, password: hashedPassword },
-    });
+      if (!tempUserData) {
+        return res.status(400).json({
+          success: false,
+          message: "Temporary user data not found",
+        });
+      }
 
-    await prisma.oTP.delete({ where: { id: otpEntry.id } });
+      const { username, password } = tempUserData;
 
-    delete req.session.tempUserData;
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    res.status(200).json({
-      success: true,
-      message: "User registered successfully",
-      user: newUser,
+      // Create the new user
+      const newUser = await prisma.user.create({
+        data: { username, email, password: hashedPassword },
+      });
+
+      // Clean up OTP entry and temporary user data
+      await prisma.oTP.delete({ where: { id: otpEntry.id } });
+      client.del(email);
+
+      res.status(200).json({
+        success: true,
+        message: "User registered successfully",
+        user: newUser,
+      });
     });
   } catch (error) {
     res.status(500).json({
