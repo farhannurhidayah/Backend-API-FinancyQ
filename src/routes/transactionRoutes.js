@@ -5,6 +5,7 @@ const authenticateToken = require("../middlewares/auth");
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
+router.get('/:userId/export-pdf',authenticateToken,transactionController.exportToPDF);
 router.get('/:type/:idUser', (req, res, next) => {
     const { type, idUser } = req.params;
 
@@ -45,6 +46,6 @@ router.delete('/:type/:id', (req, res, next) => {
     }
 }, authenticateToken,transactionController.deleteTransaction);
 
-router.get('/:userId/export-pdf',authenticateToken,transactionController.exportToPDF);
+
 
 module.exports = router;
