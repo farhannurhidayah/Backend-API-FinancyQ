@@ -45,7 +45,7 @@ exports.getAllTransactionsByUser = async (req, res) => {
     const tableInfo = getTableByType(type);
 
     if (!tableInfo) {
-        return res.status(400).json({ message: 'Invalid transaction type' });
+        return res.status(400).json({ error: true, message: 'Invalid transaction type' });
     }
 
     try {
@@ -56,17 +56,8 @@ exports.getAllTransactionsByUser = async (req, res) => {
             },
         });
 
-        // Group transactions by idUser
-        const groupedTransactions = transactions.reduce((acc, curr) => {
-            if (!acc[curr.idUser]) {
-                acc[curr.idUser] = {
-                    username: curr.user.username,
-                    error: false,
-                    message: "Message Success",
-                    transactions: []
-                };
-            }
-            // Determine if the transaction type is 'pengeluaran' to include the 'lampiran' field
+        // Map transactions to desired format
+        const formattedTransactions = transactions.map(curr => {
             const transactionData = {
                 idTransaksi: curr[tableInfo.idField],
                 jumlah: curr.jumlah,
@@ -78,14 +69,65 @@ exports.getAllTransactionsByUser = async (req, res) => {
             if (type === 'pengeluaran') {
                 transactionData.lampiran = curr.lampiran;
             }
-            acc[curr.idUser].transactions.push(transactionData);
-            return acc;
-        }, {});
+            return transactionData;
+        });
 
-        // Return the grouped transactions as an object
-        res.json(groupedTransactions);
+        // Return the formatted transactions
+        res.json({
+            error: false,
+            message: "Message Success",
+            transactions: formattedTransactions
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({ error: true, message: err.message });
+    }
+};
+
+exports.getTransactionById = async (req, res) => {
+    const { idTransaksi, type } = req.params;
+    const tableInfo = getTableByType(type);
+
+    if (!tableInfo) {
+        return res.status(400).json({ error: true, message: 'Invalid transaction type' });
+    }
+
+    try {
+        // Cari ID transaksi dalam tabel laporan
+        const laporanData = await prisma.laporan.findUnique({
+            where: {
+                OR: [
+                    { idTransaksiPengeluaran: parseInt(idTransaksi) },
+                    { idTransaksiPemasukan: parseInt(idTransaksi) }
+                ]
+            }
+        });
+
+        if (!laporanData) {
+            return res.status(404).json({ error: true, message: 'Transaction not found in report' });
+        }
+
+        // Ambil data transaksi dari tabel yang sesuai, kecuali idTransaksi dan idUser
+        const transactionData = await tableInfo.table.findUnique({
+            where: {
+                [tableInfo.idField]: parseInt(idTransaksi)
+            },
+            select: {
+                jumlah: true,
+                deskripsi: true,
+                tanggal: true,
+                kategori: true,
+                sumber: true,
+                lampiran: true // Sesuaikan dengan kolom-kolom yang ingin ditampilkan
+            },
+        });
+
+        if (!transactionData) {
+            return res.status(404).json({ error: true, message: 'Transaction data not found' });
+        }
+
+        res.json({ error: false, message: 'Success', data: transactionData });
+    } catch (err) {
+        res.status(500).json({ error: true, message: err.message });
     }
 };
 
@@ -102,44 +144,37 @@ exports.createTransaction = async (req, res) => {
     try {
         let lampiranUrl = null;
 
-        // Unggah gambar ke GCS jika ada dan ini adalah transaksi pengeluaran
         if (type === 'pengeluaran' && req.file) {
             lampiranUrl = await uploadImageToGCS(req.file);
         }
 
-        let Transaksi;
-        if (type === 'pengeluaran') {
-            Transaksi = await tableInfo.table.create({
-                data: {
-                    idUser,
-                    jumlah : parseFloat(jumlah),
-                    deskripsi,
-                    tanggal: new Date(),
-                    kategori,
-                    sumber,
-                    lampiran: lampiranUrl // Sertakan lampiranUrl jika ini transaksi pengeluaran
-                },
-            });
-        } else if (type === 'pemasukan') {
-            Transaksi = await tableInfo.table.create({
-                data: {
-                    idUser,
-                    jumlah,
-                    deskripsi,
-                    tanggal: new Date(),
-                    kategori,
-                    sumber
-                    // Tambahkan kolom lainnya yang diperlukan untuk pemasukan
-                },
-            });
-        }
+        const transactionData = {
+            idUser,
+            jumlah: parseFloat(jumlah),
+            deskripsi,
+            tanggal: new Date(),
+            kategori,
+            sumber,
+            ...(type === 'pengeluaran' && { lampiran: lampiranUrl }) // Sertakan lampiran jika tipe pengeluaran
+        };
+
+        const Transaksi = await tableInfo.table.create({ data: transactionData });
+
+        // Membuat laporan
+        await prisma.laporan.create({
+            data: {
+                idUser,
+                keterangan: deskripsi,
+                tanggal: new Date(),
+                ...(type === 'pengeluaran' ? { idTransaksiPengeluaran: Transaksi.idTransaksiPengeluaran } : { idTransaksiPemasukan: Transaksi.idTransaksiPemasukan })
+            }
+        });
 
         res.status(201).json(Transaksi);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 };
-
 exports.updateTransaction = async (req, res) => {
     const { id, type } = req.params;
     const updateData = req.body;
