@@ -15,9 +15,9 @@ const host = process.env.HOST || "localhost";
 app.use(express.urlencoded({ extended: false }));
 
 // Middleware
-app.set("trust proxy", 1); // trust first proxy
 app.use(cors());
 app.use(express.json());
+app.set("trust proxy", 1); // trust first proxy
 app.use(sessionMiddleware);
 
 // Define Routes

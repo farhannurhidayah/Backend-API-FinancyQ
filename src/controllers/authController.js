@@ -15,6 +15,8 @@ const generateRefreshToken = (user) => {
   return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
 };
 
+//===================================================================================
+
 exports.signup = async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -39,16 +41,13 @@ exports.signup = async (req, res) => {
       });
     }
 
-    const otp = generateOTP();
+    const otp = generateOTP(); // Generate 6 digit OTP
 
     await prisma.oTP.create({
-      data: { email, otp },
+      data: { email, otp, tempUserData: { username, email, password } },
     });
 
     await sendingmail(email, otp);
-
-    req.session.tempUserData = { username, email, password };
-    console.log(req.session.tempUserData); // check signup
 
     res.status(200).json({
       success: true,
@@ -95,29 +94,44 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
-    console.log(req.session.tempUserData); // check otp
-    const { username, password } = req.session.tempUserData;
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = await prisma.user.create({
-      data: { username, email, password: hashedPassword },
+    // Check if user already exists
+    let user = await prisma.user.findUnique({
+      where: { email },
     });
 
-    await prisma.oTP.delete({ where: { id: otpEntry.id } });
+    if (!user) {
+      // Retrieve temporary user data from OTP table
+      const tempUserData = otpEntry.tempUserData;
 
-    delete req.session.tempUserData;
+      if (!tempUserData) {
+        return res.status(400).json({
+          success: false,
+          message: "Temporary user data not found",
+        });
+      }
+
+      const { username, password } = tempUserData;
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create new user
+      user = await prisma.user.create({
+        data: { username, email, password: hashedPassword },
+      });
+    }
+
+    // Clean up OTP entry
+    await prisma.oTP.delete({ where: { id: otpEntry.id } });
 
     res.status(200).json({
       success: true,
-      message: "User registered successfully",
-      user: newUser,
+      message: "User verified successfully, please login to continue",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error during registration: " + error.message,
+      message: "Error during verification: " + error.message,
     });
   }
 };
@@ -151,7 +165,12 @@ exports.login = async (req, res) => {
       data: { refreshToken },
     });
 
-    res.json({ username: user.username, email: user.email, refreshToken });
+    res.json({
+      userId: user.id,
+      username: user.username,
+      email: user.email,
+      refreshToken,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -196,8 +215,9 @@ exports.logout = async (req, res) => {
         .json({ error: "Invalid token or user already logged out" });
     }
 
-    res.sendStatus(204);
+    // Combine status code and message in a single response
+    return res.status(200).json({ message: "User logged out Succesfully" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
