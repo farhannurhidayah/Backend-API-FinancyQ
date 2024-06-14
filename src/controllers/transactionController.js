@@ -322,5 +322,34 @@ exports.exportToPDF = async (req, res) => {
     }
 };
 
+exports.getTotalTransactions = async (req, res) => {
+    const { type, idUser } = req.params;
+    const tableInfo = getTableByType(type);
+
+    if (!tableInfo) {
+        return res.status(400).json({ message: 'Invalid transaction type' });
+    }
+
+    try {
+        const transactions = await tableInfo.table.findMany({
+            where: { idUser },
+        });
+
+        const total = transactions.reduce((acc, transaction) => acc + transaction.jumlah, 0);
+
+        res.json({
+            error: false,
+            message: 'Success',
+            data: {
+                type,
+                idUser,
+                total,
+            },
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 
 
