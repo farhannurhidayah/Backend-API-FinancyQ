@@ -3,3 +3,5 @@ node_modules
 .env
 key_credentials.json
 Dockerfile
+
+.dockerignore
