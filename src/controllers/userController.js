@@ -19,7 +19,13 @@ exports.getUserByUsername = async (req, res) => {
       where: { username },
     });
     if (user) {
-      res.status(200).json(user);
+      res.status(200).json({
+        userId: user.id,
+        username: user.username,
+        email: user.email,
+        password: user.password,
+        refreshToken: user.refreshToken,
+      });
     } else {
       res.status(404).json({ error: "User not found" });
     }
