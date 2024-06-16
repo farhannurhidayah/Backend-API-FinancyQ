@@ -148,33 +148,45 @@ exports.createTransaction = async (req, res) => {
             lampiranUrl = await uploadImageToGCS(req.file);
         }
 
+        const currentDate = new Date().toISOString();  // Gunakan format ISO
+        console.log('Current Date:', currentDate);
+
         const transactionData = {
             idUser,
             jumlah: parseFloat(jumlah),
             deskripsi,
-            tanggal: new Date(),
+            tanggal: currentDate,  // Gunakan currentDate
             kategori,
             sumber,
             ...(type === 'pengeluaran' && { lampiran: lampiranUrl }) // Sertakan lampiran jika tipe pengeluaran
         };
 
+        console.log('Transaction Data:', transactionData);
+
         const Transaksi = await tableInfo.table.create({ data: transactionData });
 
+        console.log('Transaction Created:', Transaksi);
+
         // Membuat laporan
-        await prisma.laporan.create({
-            data: {
-                idUser,
-                keterangan: deskripsi,
-                tanggal: new Date(),
-                ...(type === 'pengeluaran' ? { idTransaksiPengeluaran: Transaksi.idTransaksiPengeluaran } : { idTransaksiPemasukan: Transaksi.idTransaksiPemasukan })
-            }
-        });
+        const laporanData = {
+            idUser,
+            keterangan: deskripsi,
+            tanggal: currentDate,  // Gunakan currentDate
+            ...(type === 'pengeluaran' ? { idTransaksiPengeluaran: Transaksi.idTransaksiPengeluaran } : { idTransaksiPemasukan: Transaksi.idTransaksiPemasukan })
+        };
+
+        console.log('Laporan Data:', laporanData);
+
+        await prisma.laporan.create({ data: laporanData });
 
         res.status(201).json(Transaksi);
     } catch (err) {
+        console.error('Error:', err.message);
         res.status(400).json({ message: err.message });
     }
 };
+
+
 exports.updateTransaction = async (req, res) => {
     const { id, type } = req.params;
     const updateData = req.body;
