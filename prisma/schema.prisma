@@ -18,7 +18,7 @@ model User {
   username     String  @unique
   email        String  @unique
   password     String
-  refreshToken String?
+  refreshToken String? @db.VarChar(512)
 
   Pemasukans   Pemasukan[]
   Pengeluarans Pengeluaran[]
@@ -52,7 +52,7 @@ model Pemasukan {
   idUser               String
   jumlah               Float
   deskripsi            String
-  tanggal              DateTime
+  tanggal              DateTime @default(now())
   kategori             String
   sumber               String
 
@@ -65,7 +65,7 @@ model Pengeluaran {
   idUser                 String
   jumlah                 Float
   deskripsi              String
-  tanggal                DateTime
+  tanggal                DateTime @default(now())
   kategori               String
   sumber                 String
   lampiran               String?
@@ -80,7 +80,7 @@ model Laporan {
   idTransaksiPengeluaran String?  @unique
   idTransaksiPemasukan   String?  @unique
   keterangan             String
-  tanggal                DateTime
+  tanggal                DateTime @default(now())
 
   user        User         @relation(fields: [idUser], references: [id])
   pemasukan   Pemasukan?   @relation(fields: [idTransaksiPemasukan], references: [idTransaksiPemasukan])
