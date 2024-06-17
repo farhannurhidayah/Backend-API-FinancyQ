@@ -190,12 +190,23 @@ exports.deleteTransaction = async (req, res) => {
             return res.status(404).json({ message: 'Transaction not found' });
         }
 
-        // Menghapus transaksi
+        // Menghapus transaksi dari tabel pemasukan atau pengeluaran
         await tableInfo.table.delete({
             where: { [tableInfo.idField]: id },
         });
 
-        res.json({ message: 'Transaction removed' });
+        // Hapus entri terkait dari tabel laporan
+        // Misalnya, jika Anda memiliki tabel 'laporan' dengan 'idTransaksi' sebagai referensi
+        await prisma.laporan.deleteMany({
+            where: {
+                OR: [
+                    { idTransaksiPemasukan: id },
+                    { idTransaksiPengeluaran: id },
+                ],
+            },
+        });
+
+        res.json({ message: 'Transaction and related entries removed' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
