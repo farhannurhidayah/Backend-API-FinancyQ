@@ -38,8 +38,6 @@ const uploadImageToGCS = async (file) => {
     });
 };
 
-
-
 exports.getAllTransactionsByUser = async (req, res) => {
     const { type, idUser } = req.params;
     const tableInfo = getTableByType(type);
@@ -83,9 +81,6 @@ exports.getAllTransactionsByUser = async (req, res) => {
         res.status(500).json({ error: true, message: err.message });
     }
 };
-
-
-
 
 exports.createTransaction = async (req, res) => {
     const { idUser, jumlah, deskripsi, kategori, sumber } = req.body;
