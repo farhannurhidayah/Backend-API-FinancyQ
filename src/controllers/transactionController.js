@@ -115,7 +115,11 @@ exports.createTransaction = async (req, res) => {
             ...(type === 'pengeluaran' && { lampiran: lampiranUrl }) // Sertakan lampiran jika tipe pengeluaran
         };
 
+        console.log('Transaction Data:', transactionData);
+
         const Transaksi = await tableInfo.table.create({ data: transactionData });
+
+        console.log('Transaction Created:', Transaksi);
 
         // Membuat laporan
         const laporanData = {
@@ -124,6 +128,8 @@ exports.createTransaction = async (req, res) => {
             tanggal: currentDate,  // Gunakan currentDate
             ...(type === 'pengeluaran' ? { idTransaksiPengeluaran: Transaksi.idTransaksiPengeluaran } : { idTransaksiPemasukan: Transaksi.idTransaksiPemasukan })
         };
+
+        console.log('Laporan Data:', laporanData);
 
         await prisma.laporan.create({ data: laporanData });
 
