@@ -49,6 +49,7 @@ exports.getAllTransactionsByUser = async (req, res) => {
     }
 
     try {
+        moment.locale('id');
         const transactions = await tableInfo.table.findMany({
             where: { idUser },
             include: {
@@ -62,7 +63,7 @@ exports.getAllTransactionsByUser = async (req, res) => {
                 idTransaksi: curr[tableInfo.idField],
                 jumlah: curr.jumlah,
                 deskripsi: curr.deskripsi,
-                tanggal: curr.tanggal,
+                tanggal: moment(curr.tanggal).format('dddd, DD MMMM YYYY, HH:mm'),
                 kategori: curr.kategori,
                 sumber: curr.sumber,
             };
@@ -83,53 +84,7 @@ exports.getAllTransactionsByUser = async (req, res) => {
     }
 };
 
-exports.getTransactionById = async (req, res) => {
-    const { idTransaksi, type } = req.params;
-    const tableInfo = getTableByType(type);
 
-    if (!tableInfo) {
-        return res.status(400).json({ error: true, message: 'Invalid transaction type' });
-    }
-
-    try {
-        // Cari ID transaksi dalam tabel laporan
-        const laporanData = await prisma.laporan.findUnique({
-            where: {
-                OR: [
-                    { idTransaksiPengeluaran: parseInt(idTransaksi) },
-                    { idTransaksiPemasukan: parseInt(idTransaksi) }
-                ]
-            }
-        });
-
-        if (!laporanData) {
-            return res.status(404).json({ error: true, message: 'Transaction not found in report' });
-        }
-
-        // Ambil data transaksi dari tabel yang sesuai, kecuali idTransaksi dan idUser
-        const transactionData = await tableInfo.table.findUnique({
-            where: {
-                [tableInfo.idField]: parseInt(idTransaksi)
-            },
-            select: {
-                jumlah: true,
-                deskripsi: true,
-                tanggal: true,
-                kategori: true,
-                sumber: true,
-                lampiran: true // Sesuaikan dengan kolom-kolom yang ingin ditampilkan
-            },
-        });
-
-        if (!transactionData) {
-            return res.status(404).json({ error: true, message: 'Transaction data not found' });
-        }
-
-        res.json({ error: false, message: 'Success', data: transactionData });
-    } catch (err) {
-        res.status(500).json({ error: true, message: err.message });
-    }
-};
 
 
 exports.createTransaction = async (req, res) => {
@@ -149,7 +104,6 @@ exports.createTransaction = async (req, res) => {
         }
 
         const currentDate = new Date().toISOString();  // Gunakan format ISO
-        console.log('Current Date:', currentDate);
 
         const transactionData = {
             idUser,
@@ -161,11 +115,7 @@ exports.createTransaction = async (req, res) => {
             ...(type === 'pengeluaran' && { lampiran: lampiranUrl }) // Sertakan lampiran jika tipe pengeluaran
         };
 
-        console.log('Transaction Data:', transactionData);
-
         const Transaksi = await tableInfo.table.create({ data: transactionData });
-
-        console.log('Transaction Created:', Transaksi);
 
         // Membuat laporan
         const laporanData = {
@@ -174,8 +124,6 @@ exports.createTransaction = async (req, res) => {
             tanggal: currentDate,  // Gunakan currentDate
             ...(type === 'pengeluaran' ? { idTransaksiPengeluaran: Transaksi.idTransaksiPengeluaran } : { idTransaksiPemasukan: Transaksi.idTransaksiPemasukan })
         };
-
-        console.log('Laporan Data:', laporanData);
 
         await prisma.laporan.create({ data: laporanData });
 
@@ -312,7 +260,7 @@ exports.exportToPDF = async (req, res) => {
             pemasukanTable.rows.push([
                 moment(transaction.tanggal).format('DD MMMM YYYY, HH:mm'), // Format tanggal
                 transaction.deskripsi,
-                transaction.jumlah,
+                `Rp ${transaction.jumlah.toLocaleString()}`,
                 transaction.kategori,
                 transaction.sumber,
             ]);
@@ -320,7 +268,7 @@ exports.exportToPDF = async (req, res) => {
         });
 
         pemasukanTable.rows.push([
-            '', 'Total Pemasukan', totalPemasukan, '', ''
+            '', 'Total Pemasukan', `Rp ${totalPemasukan.toLocaleString()}`, '', ''
         ]);
 
         // Gambar tabel Pemasukan
@@ -347,7 +295,7 @@ exports.exportToPDF = async (req, res) => {
             pengeluaranTable.rows.push([
                 moment(transaction.tanggal).format('DD MMMM YYYY, HH:mm'), // Format tanggal
                 transaction.deskripsi,
-                transaction.jumlah,
+                `pP ${transaction.jumlah.toLocaleString()}`,
                 transaction.kategori,
                 transaction.sumber,
                 lampiran
@@ -356,7 +304,7 @@ exports.exportToPDF = async (req, res) => {
         });
 
         pengeluaranTable.rows.push([
-            '', 'Total Pengeluaran', totalPengeluaran, '', ''
+            '', 'Total Pengeluaran', `Rp ${totalPengeluaran.toLocaleString()}`, '', ''
         ]);
 
         // Gambar tabel Pengeluaran
