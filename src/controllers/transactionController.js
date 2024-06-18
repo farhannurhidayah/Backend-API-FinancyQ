@@ -217,20 +217,26 @@ exports.exportToPDF = async (req, res) => {
         // Ambil data pemasukan berdasarkan user ID
         const pemasukan = await prisma.pemasukan.findMany({
             where: {
-                idUser: (userId)
+                idUser: userId
             },
             include: {
                 user: true,
+            },
+            orderBy: {
+                tanggal: 'asc', // Urutkan berdasarkan tanggal ascending
             },
         });
 
         // Ambil data pengeluaran berdasarkan user ID
         const pengeluaran = await prisma.pengeluaran.findMany({
             where: {
-                idUser: (userId)
+                idUser: userId
             },
             include: {
                 user: true,
+            },
+            orderBy: {
+                tanggal: 'asc', // Urutkan berdasarkan tanggal ascending
             },
         });
 
@@ -297,7 +303,6 @@ exports.exportToPDF = async (req, res) => {
             rows: []
         };
 
-       
         let totalPengeluaran = 0;
         pengeluaran.forEach((transaction) => {
             let lampiran = '-';
@@ -307,7 +312,7 @@ exports.exportToPDF = async (req, res) => {
             pengeluaranTable.rows.push([
                 moment(transaction.tanggal).format('DD MMMM YYYY, HH:mm'), // Format tanggal
                 transaction.deskripsi,
-                `pP ${transaction.jumlah.toLocaleString()}`,
+                `Rp ${transaction.jumlah.toLocaleString()}`,
                 transaction.kategori,
                 transaction.sumber,
                 lampiran
