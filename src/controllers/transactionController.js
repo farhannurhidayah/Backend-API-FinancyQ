@@ -8,6 +8,7 @@ const { Storage } = require("@google-cloud/storage");
 const classifyImage = require("../services/predict");
 const fs = require("fs"); //ini
 const path = require("path"); //ini
+const { error } = require("console");
 
 const storage = new Storage();
 const bucketName = process.env.BUCKET_NAME; // Ganti dengan nama bucket GCS Anda
@@ -452,7 +453,7 @@ exports.classifyImage = async (req, res) => {
     //     },
     // });
 
-    res.status(200).json({ result });
+    res.status(200).json({ error:false, message:"Reading Model Successfully", result });
   } catch (error) {
     console.error("Error classifying image:", error);
     res.status(500).json({ message: "Error classifying image", error });
