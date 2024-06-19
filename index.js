@@ -3,7 +3,8 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const sessionMiddleware = require("./src/middlewares/session");
 const routesthisapp = require("./src/routes/routes");
-const path = require("path");
+const path = require("path"); //ini
+const tf = require('@tensorflow/tfjs-node'); //ini
 
 dotenv.config();
 
