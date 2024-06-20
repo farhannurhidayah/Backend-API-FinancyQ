@@ -5,10 +5,11 @@ const PDFDocument = require("./pdf-kit");
 const moment = require("moment");
 require("moment/locale/id");
 const { Storage } = require("@google-cloud/storage");
-const classifyImage = require("../services/predict");
+// const classifyImage = require("../services/predict");
 const fs = require("fs"); //ini
 const path = require("path"); //ini
 const { error } = require("console");
+const Tesseract = require('tesseract.js');
 
 const storage = new Storage();
 const bucketName = process.env.BUCKET_NAME; // Ganti dengan nama bucket GCS Anda
@@ -425,37 +426,37 @@ exports.getTotalTransactions = async (req, res) => {
 
 //=================================================================================================
 
+
+
 exports.classifyImage = async (req, res) => {
   try {
     const imageBuffer = req.file.buffer;
-    const tempImagePath = path.join(
-      __dirname,
-      "../uploads",
-      `${Date.now()}.png`
-    );
+    const tempImagePath = path.join(__dirname, "../uploads", `${Date.now()}.png`);
 
     // Simpan gambar sementara ke file sistem
     fs.writeFileSync(tempImagePath, imageBuffer);
 
-    // Klasifikasi gambar
-    const result = await classifyImage(tempImagePath);
+    // Ekstraksi teks dari gambar menggunakan OCR
+    const result = await Tesseract.recognize(tempImagePath, 'eng', {
+      logger: (m) => console.log(m),
+    });
 
     // Hapus gambar sementara
     fs.unlinkSync(tempImagePath);
 
     // Simpan hasil ke database jika diperlukan
-    // Contoh: Simpan hasil klasifikasi ke tabel hasil_klasifikasi
-    // const savedResult = await prisma.hasilKlasifikasi.create({
+    // Contoh: Simpan hasil OCR ke tabel hasil_ocr
+    // const savedResult = await prisma.hasilOcr.create({
     //     data: {
     //         userId: req.user.id,
-    //         hasil: result,
+    //         hasil: result.data.text,
     //         createdAt: new Date(),
     //     },
     // });
 
-    res.status(200).json({ error:false, message:"Reading Model Successfully", result });
+    res.status(200).json({ error: false, message: "OCR completed successfully", text: result.data.text });
   } catch (error) {
-    console.error("Error classifying image:", error);
-    res.status(500).json({ message: "Error classifying image", error });
+    console.error("Error extracting text from image:", error);
+    res.status(500).json({ message: "Error extracting text from image", error });
   }
 };
