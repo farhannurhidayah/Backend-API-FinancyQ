@@ -55,9 +55,8 @@ exports.getAllTransactionsByUser = async (req, res) => {
       moment.locale('id');
       const transactions = await tableInfo.table.findMany({
           where: { idUser },
-          include: {
-              user: true,
-          },
+          include: { user: true },
+          orderBy: { tanggal: 'desc'}
       });
 
       // Map transactions to desired format
@@ -371,35 +370,58 @@ exports.getTotalTransactions = async (req, res) => {
 
 
 
-exports.classifyImage = async (req, res) => {
-  try {
-    const imageBuffer = req.file.buffer;
-    const tempImagePath = path.join(__dirname, "../uploads", `${Date.now()}.png`);
-
-    // Simpan gambar sementara ke file sistem
-    fs.writeFileSync(tempImagePath, imageBuffer);
-
-    // Ekstraksi teks dari gambar menggunakan OCR
-    const result = await Tesseract.recognize(tempImagePath, 'eng', {
-      logger: (m) => console.log(m),
-    });
-
-    // Hapus gambar sementara
-    fs.unlinkSync(tempImagePath);
-
-    // Simpan hasil ke database jika diperlukan
-    // Contoh: Simpan hasil OCR ke tabel hasil_ocr
-    // const savedResult = await prisma.hasilOcr.create({
-    //     data: {
-    //         userId: req.user.id,
-    //         hasil: result.data.text,
-    //         createdAt: new Date(),
-    //     },
-    // });
-
-    res.status(200).json({ error: false, message: "OCR completed successfully", text: result.data.text });
-  } catch (error) {
-    console.error("Error extracting text from image:", error);
-    res.status(500).json({ message: "Error extracting text from image", error });
+function parseLine(line) {
+    const regex = /^(.+?)\s+([\d,]+)\s+([\d,]+)\s+([\d,]+)$/;
+    const match = line.match(regex);
+    if (match) {
+      const totalPrice = parseFloat(match[4].replace(/,/g, ''));
+      if (!isNaN(totalPrice)) {
+        return {
+          item: match[1].trim(),
+          totalPrice: totalPrice
+        };
+      }
+    }
+    return null;
   }
-};
+  
+  function convertTextToJSON(text) {
+    const lines = text.split('\n');
+    const items = lines.map(line => parseLine(line)).filter(item => item !== null);
+  
+    // Menghitung total price
+    const totalPriceSum = items.reduce((sum, item) => sum + item.totalPrice, 0);
+  
+    return { items, totalPriceSum };
+  }
+  
+  exports.classifyImage = async (req, res) => {
+    try {
+      const imageBuffer = req.file.buffer;
+      const tempImagePath = path.join(__dirname, "../uploads", `${Date.now()}.png`);
+  
+      // Simpan gambar sementara ke file sistem
+      fs.writeFileSync(tempImagePath, imageBuffer);
+  
+      // Ekstraksi teks dari gambar menggunakan OCR
+      const result = await Tesseract.recognize(tempImagePath, 'eng', {
+        logger: (m) => console.log(m),
+      });
+  
+      // Hapus gambar sementara
+      fs.unlinkSync(tempImagePath);
+  
+      // Parsing teks hasil OCR ke dalam format JSON
+      const parsedData = convertTextToJSON(result.data.text);
+  
+      res.status(200).json({ 
+        error: false, 
+        message: "OCR completed successfully", 
+        item: "Pembelajaan", 
+        totalPrice: parsedData.totalPriceSum 
+      });
+    } catch (error) {
+      console.error("Error extracting text from image:", error);
+      res.status(500).json({ message: "Error extracting text from image", error });
+    }
+  };
